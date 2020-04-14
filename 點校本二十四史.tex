@@ -1,0 +1,58 @@
+% -*- coding: utf-8 -*-
+% !TEX program = xelatex
+
+\documentclass[12pt]{book}
+
+\usepackage{toolkit}
+
+\hypersetup{
+	pdftitle={點校本二十四史}, 
+	pdfauthor={张洋}, 
+	pdfcreator={张洋}, 
+	pdfproducer={张洋},
+	unicode=true, pdftoolbar=true, 
+	pdfmenubar=true, pdffitwindow=true,
+	pdfstartview={FitH}, pdfnewwindow=true,
+	colorlinks=true, citecolor=green,
+	filecolor=magenta, urlcolor=cyan
+}
+
+
+\author{张洋}
+\title{\resizebox{0.6\textwidth}{!}{點校本二十四史}}
+
+
+\begin{document}
+
+\kaishu
+	
+\maketitle
+
+\tableofcontents
+
+
+\Large 
+
+\input{./史記/史記.tex}
+
+\input{./漢書/漢書.tex}
+
+\input{./後漢書/後漢書.tex}
+
+\input{./三國志/三國志.tex}
+
+\input{./晉書/晉書.tex}
+
+\input{./宋書/宋書.tex}
+
+\input{./南齊書/南齊書.tex}
+
+\input{./梁書/梁書.tex}
+
+\input{./隋書/隋書.tex}
+
+\input{./北齊書/北齊書.tex}
+
+\input{./隋書/隋書.tex}
+
+\end{document}

@@ -1,0 +1,268 @@
+% https://github.com/dohyunkim/halzu
+\ProvidesPackage{toolkit}[2020/03/23]
+
+\usepackage{ctex}
+
+\usepackage{fancyvrb}
+\usepackage[a4paper, left=1in, right=0.8in, bottom=1in]{geometry}
+\usepackage{listings}
+% \usepackage[toc]{multitoc}
+% \renewcommand*{\multicolumntoc}{2}
+
+\usepackage{setspace}
+\onehalfspacing
+
+\usepackage{tikz}
+\usepackage{ulem} 	% normalem
+\usepackage{xcolor}
+\usepackage{xpinyin}
+
+% \renewenvironment{pinyinscope}{}{}
+
+
+\usepackage{hyperref}
+\usepackage{hyperxmp}
+
+\newcommand{\bookname}[1]{\part{#1}}
+\newcommand{\volume}[1]{\chapter{#1}}
+\newcommand{\article}[1]{\chapter{#1}}
+
+\newcommand{\renming}[1]{\uline{#1}}
+\newcommand{\diming}[1]{\uwave{#1}}
+\newcommand{\guanming}[1]{\uuline{#1}}
+\newcommand{\shuming}[1]{\dotuline{#1}}
+
+% https://www.tug.org/svn/texlive/trunk/Master/texmf-dist/tex/latex/base/latex.ltx?view=co
+
+% \numexpr produces integers
+% \dimexpr produces dimensions
+% \glueexpr produces glue expressions
+% \muexpr produces muskip values
+
+\let\gezhuraise\z@ 		% \newdimen\z@ \z@=0pt
+\def\gezhu@lines{2} 		% Lines of Warichu
+\def\gezhusize{0.5} 		% Relative Size of Warichu
+\def\gezhu@size{0.5}
+\def\gezhuopening{\char40} 	% 割注开始字符
+\def\gezhuclosing{\char41} 	% 割注结束字符
+
+
+\def\gezhucentering{%
+	\leftskip\z@ plus2em\relax 	% The \relax prevents undesired behaviour if a plus or a minus is encountered after the command. 
+	\rightskip\leftskip
+	\parindent\z@
+	\parfillskip\z@skip 		% \newskip\z@skip \z@skip=0pt plus0pt minus0pt
+}
+
+% \protected will prevent a macro being expanded inside an \edef or \write
+\protected\def\gezhu#1#{%
+	\begingroup
+	% get command option
+	\ifx\empty#1\empty 		% \ifx \Macro1 \Macro2 <tex commands> \else <tex commands> \fi
+		\let\gezhu@centering\relax
+	\else
+		\let\gezhu@centering\gezhucentering
+		\let\\\break
+	\fi
+	\gezhu@gezhu
+}
+
+
+% 输出开始和结束字符
+\def\gezhu@surrounding{% typeset gezhuopening/gezhuclosing
+	\ifdim\ht6>\z@ % \ht, \dp, \wd：返回及设置盒子寄存器的高度、深度、宽度。
+		\raise\dimexpr\gezhuraise\relax\copy6 % \copyN copies the content of box register N. The old contents remain.
+	\else
+		\begingroup\unhcopy6\endgroup
+	\fi
+}
+
+% https://liam.page/2018/05/21/TeX-by-Topic-boxes/
+
+\def\gezhu@first@two#1#2{% #1: contents; #2: width of first two lines
+	% \setbox<number><equals><box>
+	\setbox\z@\vbox{\hsize #2\emergencystretch.25em \parshape\thr@@\z@#2\z@#2\z@\maxdimen #1} %\setbox： 将盒子赋值给一个盒子寄存器。
+	\setbox\tw@\vsplit\z@ to\tw@\baselineskip % \chardef\tw@=2
+	\gezhu@typeset{\unvbox\tw@}{\wd\tw@}%
+	\penalty\z@
+	\gezhu@remaining
+}
+
+
+\def\gezhu@remaining{%
+	\setbox\z@\hbox{%
+		\loop
+			\setbox\tw@\vsplit\z@ to\baselineskip % \vsplit <8-bit number> to <dimen>
+		\unless\ifvoid\tw@
+			\setbox\tw@\vbox{\unvbox\tw@\global\setbox\@ne\lastbox}%
+			\unhbox\@ne\unskip
+		\repeat
+		\unskip\unpenalty
+	}%
+	\dimen@ 0.5\wd\z@ % check the maximum width of each line. \dimendef\dimen@=0,  \dimendef<name>=<8-bit register number>
+	\dimen4 \wd\z@    % check the minimum width of each line.
+	\count@ \z@       % check the number of lines
+	\setbox\tw@\vbox{\hbadness\maxdimen\hfuzz\maxdimen\hsize\dimen@\unhcopy\z@}%
+	\loop
+		\setbox4\vsplit\tw@ to\baselineskip
+	\unless\ifvoid4
+		\advance\count@\@ne
+		\setbox4\vbox{\unvbox4\global\setbox\@ne\lastbox}%
+		\setbox4\hbox{\unhbox\@ne}%
+		\ifdim\wd4>\dimen@ \dimen@\wd4 \fi
+		\ifdim\wd4<\dimen4 \dimen4\wd4 \fi
+	\repeat
+	\ifdim\dimen@>\z@
+		\ifnum\count@>\tw@ \advance\dimen@\dimen4 \fi
+		\ifdim\dimen@ii<\dimen@
+			\gezhu@first@two{\unhbox\z@}\dimen@ii
+		\else
+			\gezhu@typeset{\unhbox\z@}\dimen@
+		\fi
+	\fi
+}
+
+
+\def\gezhu@typeset#1#2{% 1: contents; 2: width,
+	\setbox4\vbox{\hsize#2\gezhu@centering #1}%
+	\ht4=.5\dimexpr\ht4+\dp4\relax
+	\dp4=\ht4
+	\raise.5\dimexpr
+	\ifdim\ht6>\z@
+		\ht6 -\dp6
+	\else
+		\dimen8
+	\fi +\tw@\dimexpr\gezhuraise\relax\relax
+	\box4
+}
+
+
+\def\gezhu@gezhu#1{%
+	\leavevmode 	% Ensures that the vertical mode is ended and horizontal mode is entered
+	\dimen8=1ex 	% dimen8 = 1ex of document font
+	\dimen6=\gezhusize\dimexpr\f@size\p@\relax % dimen6 = gezhu font size, \newdimen\p@ \p@=1pt
+	%
+	\dimen@ii\dimexpr
+	\ifdim\hsize<\linewidth % \ifdim <dimension-1><R><dimension-2> <tex-code-1> [\else <tex-code-2>] \fi
+		\hsize
+	\else
+		\linewidth
+	\fi
+	-\leftskip-\rightskip\relax % dimen2 = line width
+	%
+	\parskip\z@
+	% get current horiz. position -> @tempdima
+	% 获取当前行位置
+	% \newdimen\@tempdima
+	% \newcount\@tempcnta
+	\@tempdima\z@
+	\global\@tempcnta\z@ % to store prevgraf
+	\ifinner % \ifinner <TeX code 1> [\else <TeX code 2>] \fi
+	\else 
+		\ifmmode % \ifmmode <TeX code 1> [\else <TeX code 2>] \fi
+		\else
+			\edef\@tempa{\the\leftskip}% \edef <command> {<replacement-text>}
+			\edef\@tempb{\the\@flushglue}% \newskip\@flushglue \@flushglue = 0pt plus 1fil
+			\ifx\@tempa\@tempb 
+			\else % not in centering/raggedleft
+				\begingroup
+					\parfillskip\z@ plus 1fil\relax % \newdimen\z@ \z@=0pt
+					\predisplaypenalty\@M % \mathchardef\@M=10000
+					\postdisplaypenalty\@M
+					\abovedisplayshortskip\z@
+					\belowdisplayshortskip\z@
+					\abovedisplayskip\z@
+					\belowdisplayskip\z@
+					\null % respect preceding glue, \def\null{\hbox{}}
+					$$\global\@tempdima\predisplaysize \global\@tempcnta\prevgraf$$%
+					\vskip-2\baselineskip
+					\noindent
+				\endgroup
+				\ifdim\@tempdima<\z@  % empty line
+					\@tempdima\dimen@ii % \dimendef\dimen@ii=2
+				\else
+					\advance\@tempdima -2em
+					\advance\@tempdima -\leftskip
+					\ifnum\parshape=\@ne % for list env, \chardef\@ne=1, \chardef\<name>=<charcode>, Equivalent of \def\<name>{\char<charcode>}
+						\advance\@tempdima -\@totalleftmargin % \newdimen\@totalleftmargin \@totalleftmargin=\z@
+					\else
+						\ifnum\parshape=\z@ % for hangindent
+							\ifdim\hangindent>\z@
+								\ifnum\hangafter<\z@
+									\ifnum\@tempcnta>-\hangafter
+									\else
+										\advance\@tempdima -\hangindent
+										\advance\dimen@ii  -\hangindent
+									\fi
+								\else
+									\ifnum\@tempcnta>\hangafter
+										\advance\@tempdima -\hangindent
+										\advance\dimen@ii  -\hangindent
+									\fi
+								\fi
+							\else
+								\ifdim\hangindent<\z@
+									\ifnum\hangafter<\z@
+										\ifnum\@tempcnta>-\hangafter
+										\else
+											\advance\dimen@ii \hangindent
+										\fi
+									\else
+										\ifnum\@tempcnta>\hangafter
+											\advance\dimen@ii \hangindent
+										\fi
+									\fi
+								\fi
+							\fi
+						\fi
+					\fi
+					\ifdim\@tempdima>\dimen@ii % already full
+						\@tempdima\dimen@ii
+					\else
+						\kern\@tempdima
+					\fi
+				\fi
+			\fi
+		\fi
+	\fi
+	\setbox6\hbox{\fontsize{2.1\dimen6}\z@\selectfont\gezhuopening}% opening
+	\dimen@\dimexpr\dimen@ii-\@tempdima-\wd6\relax % dimen0 = remaining width
+	\ifdim\dimen@<.5\dimen6\relax
+		\penalty-\@M
+		\dimen@\dimen@ii
+	\else
+		\penalty\z@
+	\fi
+	\gezhu@surrounding
+	%
+	\vbadness\maxdimen
+	\vfuzz\maxdimen
+	\let\fontsubfuzz\maxdimen
+	\parindent\z@
+	\leftskip\z@
+	\rightskip\z@
+	\splittopskip\z@
+	\clubpenalty\z@
+	\everypar{{\setbox\z@\lastbox}}%
+	\linespread\@ne
+	\fontsize{\dimen6}{1.1\dimen6}\selectfont
+	%
+	\setbox\z@\hbox{#1}%
+	\ifdim\dimen@<.5\wd\z@
+		\gezhu@first@two{#1}\dimen@
+	\else
+		\setbox\z@\vbox{\hsize\maxdimen #1}%
+		\gezhu@remaining
+	\fi
+	\unpenalty
+	\setbox6\hbox{\fontsize{2.1\dimen6}\z@\selectfont\gezhuclosing}% closing
+	\gezhu@surrounding
+	\endgroup
+	\ifnum\@tempcnta>\z@
+		\prevgraf\numexpr\@tempcnta-1\relax
+	\fi
+}
+
+
+\renewcommand{\gezhu}[1]{}
+
